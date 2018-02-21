@@ -12,43 +12,33 @@ struct net_sizes {
     std::vector<int> B1;
     pair W2;
     int B2;
-};
+};*/
 
 
 
 class neural_net {
 public:
 
-    neural_net();
-    ~neural_net();
-    neural_net(const neural_net&);
-    neural_net& operator=(const neural_net&);
+    neural_net() = default;
 
     void add_input_layer(int W_in, int D);
-    void add_convolution_layer(Activation::FunctionType, int W_out, int K, int W_filter, int Stride);
+    void add_convolution_layer(FunctionType, int W_out, int K, int W_filter, int Stride);
     void add_pooling_layer(int pooling_width);
-    void add_fully_connected_layer(Activation::FunctionType, int N_out);
+    void add_fully_connected_layer(FunctionType, int N_out);
 
     vector action(const tensor &);
     void forward_propagate(const tensor &);
-
-    net_sizes return_sizes(){return sizes;}
     
-    const std::vector<convolutional_base*> * ptr_conv_layers() const {
-        return &conv;
-    }
-
+    const std::vector<convolutional_layer> * convolution_ptr() const;
+    const std::vector<fully_connected_layer> * full_ptr() const;
+    const input_layer * input_ptr() const;
 
 private:
 
-    input_layer * inpt = nullptr;
-    std::vector<convolutional_base*> conv;
-    std::vector<fully_connected_base*> full;
-
-    net_sizes sizes;
+    input_layer inpt;
+    std::vector<convolutional_layer> conv;
+    std::vector<fully_connected_layer> full;
 };
-
-*/
 
 /*
 

@@ -22,7 +22,7 @@ struct pair {
 
 class input_layer {
 public:
-
+    input_layer() = default;
     input_layer(int W, int D);
     void pooling_convert(int Pw);
     tensor feed_forward(const tensor &);
