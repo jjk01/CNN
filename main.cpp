@@ -6,7 +6,7 @@
 
 int main(){
 
-    tensor x = tensor::random(10,10,3);
+    tensor x = tensor::random(20,20,3);
     vector y(8);
     y(2) = 0.2;
     y(5) = 0.3;
@@ -14,12 +14,21 @@ int main(){
 
     //training_set data;
     //data.push_back(std::make_pair(x,y));
+    
+    
+
+
 
     try {
         
-        convolutional_layer X(FunctionType::sigmoid,10,3,8,1,3,1);
+        input_layer X(20,3);
         X.pooling_convert(2);
-        tensor y = X.feed_forward(x);
+        
+        
+        convolutional_layer Y(FunctionType::sigmoid,10,3,8,1,3,1);
+        Y.pooling_convert(2);
+        
+        tensor y = Y.feed_forward(X.feed_forward(x));
         y.print();
         
 

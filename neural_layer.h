@@ -23,17 +23,21 @@ struct pair {
 class input_layer {
 public:
 
-    input_layer(int W_in, int W_out, int D);
+    input_layer(int W, int D);
     void pooling_convert(int Pw);
     tensor feed_forward(const tensor &);
 
     tensor get_output() const;
     pair output_size() const;
 
-protected:
-    bool pooling;
+private:
+    
+    void pool(const tensor &);
+    
+    bool pooled;
     int input_width;
-    int pooling_with;
+    int depth;
+    int pooling_width;
     tensor a;
 };
 
@@ -101,25 +105,25 @@ private:
 //////////////////////////
 /* Fully connected part */
 //////////////////////////
-/*
+
 
 class fully_connected_layer {
 public:
     
-    fully_connected_layer(int,int);
+    fully_connected_layer(FunctionType, int,int);
     vector feed_forward(const vector&);
 
     FunctionType return_funcType();
 
     void update(const matrix& dw, const vector & db);
 
-    vector get_output() const {return a;};
-    matrix get_weight(){return w;}
-    vector get_bias(){return b;}
+    vector get_output() const;
+    matrix get_weight() const;
+    vector get_bias() const;
 
-    pair weight_size(){return pair(w.rows(),w.cols());}
-    int bias_size(){return b.size();}
-    int output_size(){return a.size();}
+    pair weight_size() const;
+    int bias_size() const;
+    int output_size() const;
 
 private:
 
@@ -129,6 +133,6 @@ private:
     
     ActivationFunction<matrix> fn;
 };
-*/
+
 
 #endif /* NEUTRON_LAYER_H */

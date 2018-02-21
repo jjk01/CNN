@@ -4,24 +4,14 @@
 
 
 
-input_layer::input_layer(int W_in, int W_out, int D):
-input_width(W_in), a(tensor::zeros(W_out,W_out,D)), pooling(false), pooling_with(0){}
+input_layer::input_layer(int W, int D):
+input_width(W), depth(D), a(tensor::zeros(W,W,D)), pooled(false), pooling_width(0){}
     
 
 tensor input_layer::feed_forward(const tensor & t){
     
-    if (t.size(index::x) != a.size(index::x) || t.size(index::y) != a.size(index::y) || t.size(index::z) != a.size(index::z)){
-        throw Exception("wrong input vector size.");
-    }
-    
-    if (pooling){
-        for (int x = 0; x < a.size(index::x); x++){
-            for (int y = 0; y < a.size(index::y); y++){
-                for (int z = 0; z < a.size(index::z); z++){
-                    a(x,y,z) = t.block(x*pooling_with, y*pooling_with, z, pooling_with, pooling_with,1).max();
-                }
-            }
-        }
+    if (pooled){
+        pool(t);
     } else {
         a = t;
     }
@@ -29,7 +19,19 @@ tensor input_layer::feed_forward(const tensor & t){
     return a;
 }
 
+
+void input_layer::pool(const tensor & t) {
     
+    for (int x = 0; x < a.size(index::x); x++){
+        for (int y = 0; y < a.size(index::y); y++){
+            for (int z = 0; z < a.size(index::z); z++){
+                a(x,y,z) = t.block(x*pooling_width, y*pooling_width, z, pooling_width, pooling_width,1).max();
+            }
+        }
+    }
+}
+
+
 tensor input_layer::get_output() const {
     return a;
 }
@@ -47,9 +49,9 @@ void input_layer::pooling_convert(int width){
         throw Exception("pooling layer: the pooling width must divide the input width.");
     }
     
-    pooling_with = width;
-    pooling = true;
-    a = tensor::zeros(a.size(index::x)/width,a.size(index::y)/width,a.size(index::z));
+    pooling_width = width;
+    pooled = true;
+    a = tensor::zeros(input_width/width,input_width/width,a.size(index::z));
 }
 
 
@@ -212,9 +214,9 @@ tensor convolutional_layer::pool(const tensor & t){
 /* Fully connected layers */
 ////////////////////////////
 
-/*
-fully_connected_base::fully_connected_base(int n_in, int n_layer):
-a(vector(n_layer)), b(vector(n_layer)), w(matrix(n_layer,n_in)) {
+
+fully_connected_layer::fully_connected_layer(FunctionType ft, int n_in, int n_layer):
+a(vector(n_layer)), b(vector(n_layer)), w(matrix(n_layer,n_in)), fn(ActivationFunction<matrix>(ft)) {
 
 
     std::default_random_engine generator;
@@ -230,7 +232,7 @@ a(vector(n_layer)), b(vector(n_layer)), w(matrix(n_layer,n_in)) {
 }
 
 
-void fully_connected_base::update(const matrix& dw, const vector & db){
+void fully_connected_layer::update(const matrix& dw, const vector & db){
 
     w += dw;
     b += db;
@@ -238,21 +240,50 @@ void fully_connected_base::update(const matrix& dw, const vector & db){
 
 
 
-
-
-template <class FuncType>
-fully_connected_layer<FuncType>::fully_connected_layer(int n_in, int n_layer): fully_connected_base(n_in,n_layer){
-    std::cout << "fully connected layer created \n";
-    std::cout << "input size = " << n_in << ", output size = " << n_layer  <<  "\n\n";
-    
-}
-
-
-template <class FuncType>
-vector fully_connected_layer<FuncType>::feed_forward(const vector& x){
+vector fully_connected_layer::feed_forward(const vector& x){
     
     vector z = w*x + b;
-    a = act_fn(z);
+    a = fn(z);
     return a;
 }
-*/
+
+
+
+
+FunctionType fully_connected_layer::return_funcType(){
+    return fn.return_funcType();
+}
+
+
+
+vector fully_connected_layer::get_output() const {
+    return a;
+}
+
+
+matrix fully_connected_layer::get_weight() const {
+    return w;
+}
+
+
+vector fully_connected_layer::get_bias() const {
+    return b;
+}
+
+
+pair fully_connected_layer::weight_size() const {
+    return pair(w.rows(),w.cols());
+}
+
+
+
+int fully_connected_layer::bias_size() const {
+    return b.size();
+}
+
+
+int fully_connected_layer::output_size() const {
+    return a.size();
+}
+
+
