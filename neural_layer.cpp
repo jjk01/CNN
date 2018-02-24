@@ -60,7 +60,7 @@ void input_layer::pooling_convert(int width){
 
 
 
-convolutional_layer::convolutional_layer(FunctionType FT, int W_in, int D, int W_out, int K, int W_filter, int S):
+convolutional_layer::convolutional_layer(HiddenType FT, int W_in, int D, int W_out, int K, int W_filter, int S):
 act_fn(ActivationFunction<tensor>(FT)), stride(S), depth(D), a(tensor::zeros(W_out,W_out,K)), b(tensor::zeros(W_out,W_out,K)),
 pooled(false), pooling_width(0), ind(tensor()), output_width(W_out)
 {
@@ -215,20 +215,34 @@ tensor convolutional_layer::pool(const tensor & t){
 ////////////////////////////
 
 
-fully_connected_layer::fully_connected_layer(FunctionType ft, int n_in, int n_layer):
-a(vector(n_layer)), b(vector(n_layer)), w(matrix(n_layer,n_in)), fn(ActivationFunction<matrix>(ft)) {
-
-
+void fully_connected_layer::initialise_parameters(int n_in, int n_layer) {
+    
+    a = vector(n_layer);
+    b = vector(n_layer);
+    w = matrix(n_layer,n_in);
+    
+    
     std::default_random_engine generator;
     std::normal_distribution<double> weight_dist(0,1/sqrt(n_in)),bias_dist(0,1) ;
-
+    
     for (int row=0; row<n_layer; row++){
         b(row) = bias_dist(generator);
         for (int col=0; col<n_in; col++){
             w(row,col) = weight_dist(generator);
         }
     }
+    
+}
 
+
+
+fully_connected_layer::fully_connected_layer(HiddenType ft, int n_in, int n_layer): fn(ActivationFunction<vector>(ft)) {
+    initialise_parameters(n_in,n_layer);
+};
+
+
+fully_connected_layer::fully_connected_layer(OutputType ft, int n_in, int n_layer): fn(ActivationFunction<vector>(ft)){
+    initialise_parameters(n_in,n_layer);
 }
 
 
@@ -286,4 +300,7 @@ int fully_connected_layer::output_size() const {
     return a.size();
 }
 
+
+
+output_layer::output_layer(OutputType _fn, int n_in, int n_layer): fully_connected_layer(_fn, n_in,n_layer){};
 

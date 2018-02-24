@@ -4,32 +4,23 @@
 #include <stdio.h>
 #include <set>
 #include "neural_net.h"
+#include "gradient_functions.h"
 
-using training_set = std::vector <std::pair<tensor,vector>>;
-
-//using tensor_array = std::vector<std::vector<tensor>>;
-//using tensor_vector = std::vector<tensor>;
-//using matrix_vector = std::vector<matrix>;
-//using vector_vector = std::vector<vector>;
+using training_set = std::vector<std::pair<tensor,vector>>;
 
 
 
-class Backpropagation {
+
+
+
+class Gradient_Descent {
 public:
     
-    Backpropagation();
-    Backpropagation(neural_net);
+    Gradient_Descent();
+    Gradient_Descent(const neural_net *);
     
 
 private:
-    
-    std::vector<FunctionType> conv_func;
-    std::vector<bool> conv_pool;
-    std::vector <tensor> conv_err;
-    
-    std::vector<FunctionType> full_func;
-    std::vector<bool> full_pool;
-    std::vector<vector> full_err;
     
     tensor conv_pass_back(tensor X, int ind);
     tensor conv_pass_back(vector X, int ind);
@@ -41,13 +32,16 @@ private:
     void backpropagate(tensor x, vector y);
     void update_net();
     
-    neural_net NN;
+    neural_net * NN;
+    std::vector<GradientFunction<tensor>> conv_grad;
+    std::vector<GradientFunction<matrix>> full_grad;
+    //OutputGradient otp_grad;
 };
 
 
 
 /*
-class Trainer {
+class TrainingStatergy {
 public:
 
     Trainer(neural_net, training_set);

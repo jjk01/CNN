@@ -22,7 +22,6 @@ struct pair {
 
 class input_layer {
 public:
-    input_layer() = default;
     input_layer(int W, int D);
     void pooling_convert(int Pw);
     tensor feed_forward(const tensor &);
@@ -52,7 +51,7 @@ private:
 class convolutional_layer {
 public:
 
-    convolutional_layer(FunctionType ft, int W_in, int Depth, int W_out, int Kernals, int W_filter, int Stride);
+    convolutional_layer(HiddenType fn, int W_in, int Depth, int W_out, int Kernals, int W_filter, int Stride);
     
     tensor feed_forward(const tensor&);
     void pooling_convert(int Pw);
@@ -110,7 +109,7 @@ private:
 class fully_connected_layer {
 public:
     
-    fully_connected_layer(FunctionType, int,int);
+    fully_connected_layer(HiddenType, int,int);
     vector feed_forward(const vector&);
 
     FunctionType return_funcType();
@@ -125,13 +124,23 @@ public:
     int bias_size() const;
     int output_size() const;
 
-private:
+protected:
+    
+    fully_connected_layer(OutputType,int,int);
+    void initialise_parameters(int,int);
 
     matrix w;
     vector b;
     vector a;
     
-    ActivationFunction<matrix> fn;
+    ActivationFunction<vector> fn;
+};
+
+
+
+class output_layer: public fully_connected_layer {
+public:
+    output_layer(OutputType, int,int);
 };
 
 

@@ -4,10 +4,9 @@
 
 
 
-
+/*
     
-tensor Backpropagation::conv_pass_back(tensor T, int n){
-    
+tensor Backpropagation::conv_pass_back(tensor T, ind){
     
     if (conv_pool[n]){
         
@@ -42,7 +41,9 @@ tensor conv_pass_back(vector X, tensor err){
         A.set_data(X.return_data());
         return pass_back(A);
     }
-};
+}
+
+
 tensor pool_pass_back(tensor X);
 tensor pool_pass_back(vector X);
     
@@ -55,8 +56,6 @@ void update_net();
 };
 
 
-
-/*
 TrainingAlgorithm::TrainingAlgorithm(neural_net _NN, training_set _data): NN(_NN), data(_data){};
 
 

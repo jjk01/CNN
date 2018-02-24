@@ -4,68 +4,82 @@
 
 #include "activation_functions.h"
 
-/*
-This file contains.
-*/
 
-
-
-struct sigmoid_gradient: public base_gradient<sigmoid_gradient> {
+template <class T>
+class GradientFunction {
+public:
     
-    template <class T>
-    T operator() (const T & x){
-        T y(x);
-        for (int k = 0; k < x.size(); k++){
-            y(k) = x(k)*(1-x(k));
+    GradientFunction(FunctionType _fn): fn_type(_fn){
+        switch (_fn){
+            case FunctionType::sigmoid:
+                fn = &GradientFunction::sigmoid_gradient;
+                break;
+            case FunctionType::tanh:
+                fn = &GradientFunction::tanh_gradient;
+                break;
+            case FunctionType::ReLU:
+                fn = &GradientFunction::ReLU_gradient;
+                break;
+            case FunctionType::softmax:
+                throw Exception("cannot specify softmax as hidden activation gradient");
+                break;
         }
-        return y;
+    };
+    
+    T operator() (const T & x) const {
+        return fn(x);
     }
     
-    FunctionType return_funcType(){
-        return FunctionType::sigmoid;
+    FunctionType return_funcType() const {
+        return fn_type;
     }
     
+private:
+    FunctionType fn_type;
+    T (*fn)(const T&);
+    
+    static T sigmoid_gradient(const T & x);
+    static T tanh_gradient(const T & x);
+    static T ReLU_gradient(const T & x);
+    static T softmax_gradient(const T & x);
 };
 
 
 
-struct tanh_gradient: public base_gradient<tanh_gradient> {
-    
-    template <class T>
-    T operator() (const T & x){
-        T y(x);
-        for (int k = 0; k < x.size(); k++){
-            y(k) = 1 - x(k)*x(k);
+template <class T>
+T GradientFunction<T>::sigmoid_gradient(const T & x){
+    T y(x);
+    for (int k = 0; k < x.size(); k++){
+        y(k) = x(k)*(1-x(k));
+    }
+    return y;
+}
+
+
+
+template <class T>
+T GradientFunction<T>::tanh_gradient(const T & x){
+    T y(x);
+    for (int k = 0; k < x.size(); k++){
+        y(k) = 1 - x(k)*x(k);
+    }
+    return y;
+}
+
+
+
+template <class T>
+T GradientFunction<T>::ReLU_gradient (const T & x){
+    T y(x);
+    for (int k = 0; k < x.size(); k++){
+        if (0 < x(k)){
+            y(k) = 1;
+        } else {
+            y(k) = 0;
         }
-        return y;
     }
-    
-    FunctionType return_funcType(){
-        return FunctionType::tanh;
-    }
-};
-
-
-
-struct ReLU_gradient: public base_gradient<ReLU_gradient>  {
-    
-    template <class T>
-    T operator() (const T & x){
-        T y(x);
-        for (int k = 0; k < x.size(); k++){
-            if (0 < x(k)){
-                y(k) = 1;
-            } else {
-                y(k) = 0;
-            }
-        }
-        return y;
-    }
-    
-    FunctionType return_funcType(){
-        return FunctionType::ReLU;
-    }
-};
+    return y;
+}
 
 
 #endif /* GRADIENT_FUNCTIONS_H */

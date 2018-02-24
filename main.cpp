@@ -20,7 +20,7 @@ int main(){
 
 
     try {
-        
+        /*
         input_layer X(20,3);
         X.pooling_convert(2);
         
@@ -29,16 +29,17 @@ int main(){
         Y.pooling_convert(2);
         
         tensor y = Y.feed_forward(X.feed_forward(x));
-        y.print();
+        y.print();*/
         
 
-        //neural_net NN;
-        /*
-        NN.add_input_layer(10,3);
-        NN.add_convolution_layer(Activation::FunctionType::sigmoid,9,1,4,1);
+        neural_net NN;
+        
+        NN.add_input_layer(20,3);
+        NN.add_pooling_layer(2);
+        NN.add_convolution_layer(HiddenType::sigmoid,9,1,4,1);
         NN.add_pooling_layer(3);
-        NN.add_fully_connected_layer(Activation::FunctionType::ReLU,8);
-        NN.add_fully_connected_layer(Activation::FunctionType::softmax,8);
+        NN.add_fully_connected_layer(HiddenType::ReLU,8);
+        NN.add_output_layer(OutputType::softmax,8);
         
         
         clock_t start = clock();
@@ -47,7 +48,7 @@ int main(){
         std::cout <<  "Time taken = " << duration << "\n";
         a.print();
         
-
+        /*
         
         Backpropagation BP(NN,data);
 

@@ -1,5 +1,5 @@
 #include "output_functions.h"
-
+/*
 namespace Output {
 
 
@@ -104,4 +104,4 @@ namespace Output {
         }
         return z;
     }
-}
+}*/

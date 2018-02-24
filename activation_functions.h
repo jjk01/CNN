@@ -17,10 +17,97 @@ enum class FunctionType {
 };
 
 
+enum class HiddenType {
+    sigmoid,
+    tanh,
+    ReLU,
+};
+
+
+enum class OutputType {
+    sigmoid,
+    tanh,
+    ReLU,
+    softmax,
+};
+
+
 
 
 template <class T>
-static T sigmoid_function(const T & x){
+class ActivationFunction {
+public:
+ 
+    ActivationFunction(HiddenType);
+    ActivationFunction(OutputType);
+ 
+    T operator() (const T & x) const {
+        return fn(x);
+    }
+    
+    FunctionType return_funcType() const {
+        return fn_type;
+    }
+    
+protected:
+    FunctionType fn_type;
+    T (*fn)(const T&);
+    
+    static T sigmoid_function(const T & x);
+    static T tanh_function(const T & x);
+    static T ReLU_function(const T & x);
+    static T softmax_function(const T & x);
+};
+
+
+
+
+template <class T>
+ActivationFunction<T>::ActivationFunction(HiddenType _fn){
+    switch (_fn){
+        case HiddenType::sigmoid:
+            fn = &ActivationFunction::sigmoid_function;
+            fn_type = FunctionType::sigmoid;
+            break;
+        case HiddenType::tanh:
+            fn = &ActivationFunction::tanh_function;
+            fn_type = FunctionType::tanh;
+            break;
+        case HiddenType::ReLU:
+            fn = &ActivationFunction::ReLU_function;
+            fn_type = FunctionType::ReLU;
+            break;
+    }
+}
+
+
+
+
+template <class T>
+ActivationFunction<T>::ActivationFunction(OutputType _fn){
+    switch (_fn){
+        case OutputType::sigmoid:
+            fn = &ActivationFunction::sigmoid_function;
+            fn_type = FunctionType::sigmoid;
+            break;
+        case OutputType::tanh:
+            fn = &ActivationFunction::tanh_function;
+            fn_type = FunctionType::tanh;
+            break;
+        case OutputType::ReLU:
+            fn = &ActivationFunction::ReLU_function;
+            fn_type = FunctionType::ReLU;
+            break;
+        case OutputType::softmax:
+            fn = &ActivationFunction::softmax_function;
+            fn_type = FunctionType::softmax;
+            break;
+    }
+}
+
+
+template <class T>
+T ActivationFunction<T>::sigmoid_function(const T & x){
     T y(x);
     for (int k = 0; k < x.size(); k++){
         y(k) = 1/(1 + std::exp(-x(k)));
@@ -31,7 +118,7 @@ static T sigmoid_function(const T & x){
 
 
 template <class T>
-static T tanh_function(const T & x){
+T ActivationFunction<T>::tanh_function(const T & x){
     T y(x);
     for (int k = 0; k < x.size(); k++){
         y(k) = tanh(x(k));
@@ -40,8 +127,9 @@ static T tanh_function(const T & x){
 }
 
 
+
 template <class T>
-static T ReLU_function (const T & x){
+T ActivationFunction<T>::ReLU_function (const T & x){
     T y(x);
     for (int k = 0; k < x.size(); k++){
         y(k) = std::max(0.0,x(k));
@@ -51,9 +139,8 @@ static T ReLU_function (const T & x){
 
 
 
-
 template <class T>
-static T softmax_function (const T & x){
+T ActivationFunction<T>::softmax_function (const T & x){
     T y(x);
     double N = 0;
     for (int k = 0; k < x.size(); k++){
@@ -61,43 +148,10 @@ static T softmax_function (const T & x){
         N += z;
         y(k) = z;
     }
-    return y;
+    return y/N;
+    
 }
 
 
-
-template <class T>
-class ActivationFunction {
-public:
-    
-    ActivationFunction(FunctionType _fn): fn_type(_fn){
-        switch (_fn){
-            case FunctionType::sigmoid:
-                fn = &sigmoid_function;
-                break;
-            case FunctionType::tanh:
-                fn = &tanh_function;
-                break;
-            case FunctionType::ReLU:
-                fn = &ReLU_function;
-                break;
-            case FunctionType::softmax:
-                fn = &softmax_function;
-                break;
-        }
-    };
-    
-    T operator() (const T & x) const {
-        return fn(x);
-    }
-    
-    FunctionType return_funcType() const {
-        return fn_type;
-    }
-    
-private:
-    FunctionType fn_type;
-    T (*fn)(const T&);
-};
 
 #endif /* ACTIVATION_FUNCTIONS_H */
