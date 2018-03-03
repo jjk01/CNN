@@ -1,6 +1,7 @@
 #include "neural_net.h"
 #include <memory>
 
+
 void neural_net::add_input_layer(int W, int D){
     inpt.reset(new input_layer(W,D));
 }
@@ -10,7 +11,9 @@ void neural_net::add_convolution_layer(HiddenType ft, int W_out, int K, int W_f,
     
     int W_in, Depth;
     
-    if (conv.empty()){
+    if (inpt == nullptr){
+        throw Exception("Input must declared prior to hidden layers.");
+    } else if (conv.empty()){
         pair prev_size = inpt -> output_size();
         W_in = prev_size.x;
         Depth = prev_size.y;
@@ -27,7 +30,9 @@ void neural_net::add_convolution_layer(HiddenType ft, int W_out, int K, int W_f,
 
 void neural_net::add_pooling_layer(int W_pooling){
     
-    if (conv.empty()){
+    if (inpt == nullptr){
+        throw Exception("Input must declared prior to hidden layers.");
+    } else if (conv.empty()){
         inpt -> pooling_convert(W_pooling);
     } else {
         conv.back().pooling_convert(W_pooling);
@@ -40,11 +45,8 @@ void neural_net::add_fully_connected_layer(HiddenType ft, int n_out){
     int n_in;
     
     if (inpt == nullptr){
-        throw Exception("input must be declared before convolutional layer.");
-    }
-    
-    
-    if (conv.empty() && full.empty()){
+        throw Exception("input must be declared before fully connected layer.");
+    } else if (conv.empty() && full.empty()){
         pair P = inpt -> output_size();
         n_in = P.x*P.x*P.y;
     } else if (!conv.empty() && full.empty()) {
@@ -54,7 +56,7 @@ void neural_net::add_fully_connected_layer(HiddenType ft, int n_out){
         n_in = full.back().output_size();
     }
     
-    full.push_back(fully_connected_layer(ft,n_in,n_out));
+    full.push_back(hidden_layer(ft,n_in,n_out));
 }
 
 
@@ -63,11 +65,8 @@ void neural_net::add_output_layer(OutputType _fn, int n_out){
     int n_in;
     
     if (inpt == nullptr){
-        throw Exception("input must be declared before convolutional layer.");
-    }
-    
-    
-    if (conv.empty() && full.empty()){
+        throw Exception("input must be declared before output layer.");
+    } else if (conv.empty() && full.empty()){
         pair P = inpt -> output_size();
         n_in = P.x*P.x*P.y;
     } else if (!conv.empty() && full.empty()) {
@@ -108,20 +107,20 @@ void neural_net::forward_propagate(const tensor & t) {
 
 
 
-/*
+
 const std::vector<convolutional_layer> * neural_net::convolution_ptr() const {
     return &conv;
 }
 
-const std::vector<fully_connected_layer> * neural_net::full_ptr() const {
+const std::vector<hidden_layer> * neural_net::full_ptr() const {
     return &full;
 }
 
 const input_layer * neural_net::input_ptr() const {
-    return &inpt;
+    return inpt.get();
 }
 
 
 const output_layer * neural_net::output_ptr() const {
-    return &otp;
-}*/
+    return otp.get();
+}

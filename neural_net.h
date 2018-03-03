@@ -18,18 +18,20 @@ public:
     vector action(const tensor &);
     void forward_propagate(const tensor &);
     
-    //const std::vector<convolutional_layer> * convolution_ptr() const;
-    //const std::vector<fully_connected_layer> * full_ptr() const;
-    //const input_layer * input_ptr() const;
-    //const output_layer * output_ptr() const;
+    const std::vector<convolutional_layer> * convolution_ptr() const;
+    const std::vector<hidden_layer> * full_ptr() const;
+    const input_layer * input_ptr() const;
+    const output_layer * output_ptr() const;
 
 private:
 
     std::unique_ptr<input_layer> inpt = nullptr;
     std::vector<convolutional_layer> conv;
-    std::vector<fully_connected_layer> full;
+    std::vector<hidden_layer> full;
     std::unique_ptr<output_layer> otp = nullptr;
 };
+
+
 
 /*
 

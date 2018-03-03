@@ -3,7 +3,6 @@
 #include "neural_layer.h"
 
 
-
 input_layer::input_layer(int W, int D):
 input_width(W), depth(D), a(tensor::zeros(W,W,D)), pooled(false), pooling_width(0){}
     
@@ -60,8 +59,8 @@ void input_layer::pooling_convert(int width){
 
 
 
-convolutional_layer::convolutional_layer(HiddenType FT, int W_in, int D, int W_out, int K, int W_filter, int S):
-act_fn(ActivationFunction<tensor>(FT)), stride(S), depth(D), a(tensor::zeros(W_out,W_out,K)), b(tensor::zeros(W_out,W_out,K)),
+convolutional_layer::convolutional_layer(HiddenType _fn, int W_in, int D, int W_out, int K, int W_filter, int S):
+act_fn(HiddenFunction<tensor>(_fn)), stride(S), depth(D), a(tensor::zeros(W_out,W_out,K)), b(tensor::zeros(W_out,W_out,K)),
 pooled(false), pooling_width(0), ind(tensor()), output_width(W_out)
 {
 
@@ -79,6 +78,9 @@ pooled(false), pooling_width(0), ind(tensor()), output_width(W_out)
 }
 
 
+const convolutional_layer * convolutional_layer::get_pointer() const {
+    return this;
+}
 
 
 std::vector<tensor> convolutional_layer::return_weights() const {
@@ -159,8 +161,14 @@ void convolutional_layer::pooling_convert(int width){
 }
 
 
-FunctionType convolutional_layer::return_funcType() const {
+HiddenType convolutional_layer::return_funcType() const {
     return act_fn.return_funcType();
+}
+
+
+
+bool convolutional_layer::pooling() const {
+    return pooled;
 }
 
 
@@ -207,6 +215,8 @@ tensor convolutional_layer::pool(const tensor & t){
     return S;
 }
 
+
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -215,7 +225,7 @@ tensor convolutional_layer::pool(const tensor & t){
 ////////////////////////////
 
 
-void fully_connected_layer::initialise_parameters(int n_in, int n_layer) {
+fully_connected_layer::fully_connected_layer(int n_in, int n_layer) {
     
     a = vector(n_layer);
     b = vector(n_layer);
@@ -236,36 +246,11 @@ void fully_connected_layer::initialise_parameters(int n_in, int n_layer) {
 
 
 
-fully_connected_layer::fully_connected_layer(HiddenType ft, int n_in, int n_layer): fn(ActivationFunction<vector>(ft)) {
-    initialise_parameters(n_in,n_layer);
-};
-
-
-fully_connected_layer::fully_connected_layer(OutputType ft, int n_in, int n_layer): fn(ActivationFunction<vector>(ft)){
-    initialise_parameters(n_in,n_layer);
-}
-
 
 void fully_connected_layer::update(const matrix& dw, const vector & db){
 
     w += dw;
     b += db;
-}
-
-
-
-vector fully_connected_layer::feed_forward(const vector& x){
-    
-    vector z = w*x + b;
-    a = fn(z);
-    return a;
-}
-
-
-
-
-FunctionType fully_connected_layer::return_funcType(){
-    return fn.return_funcType();
 }
 
 
@@ -302,5 +287,43 @@ int fully_connected_layer::output_size() const {
 
 
 
-output_layer::output_layer(OutputType _fn, int n_in, int n_layer): fully_connected_layer(_fn, n_in,n_layer){};
+hidden_layer::hidden_layer(HiddenType _fn, int n_in, int n_layer):
+fully_connected_layer(n_in,n_layer), act_fn(HiddenFunction<vector>(_fn)) {}
 
+
+const hidden_layer * hidden_layer::get_pointer() const {
+    return this;
+}
+
+
+HiddenType hidden_layer::return_funcType() const {
+    return act_fn.return_funcType();
+}
+
+vector hidden_layer::feed_forward(const vector& x){
+    vector z = w*x + b;
+    a = act_fn(z);
+    return a;
+}
+
+
+
+output_layer::output_layer(OutputType ft, int n_in, int n_layer):
+fully_connected_layer(n_in,n_layer), act_fn(OutputFunction(ft)){}
+
+
+const output_layer * output_layer::get_pointer() const {
+    return this;
+}
+
+
+OutputType output_layer::return_funcType() const {
+    return act_fn.return_funcType();
+}
+
+
+vector output_layer::feed_forward(const vector& x){
+    vector z = w*x + b;
+    a = act_fn(z);
+    return a;
+}

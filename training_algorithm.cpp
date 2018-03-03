@@ -4,8 +4,51 @@
 
 
 
-/*
+
+
+Gradient_Descent::Gradient_Descent(neural_net * _NN, LossType _loss): NN(_NN), loss(_loss){
     
+    const std::vector<convolutional_layer> * conv_ptr = NN -> convolution_ptr();
+    const std::vector<hidden_layer> * full_ptr = NN -> full_ptr();
+    const output_layer * otp_ptr = NN -> output_ptr();
+    
+    for (auto itr = conv_ptr -> begin(); itr != conv_ptr -> end(); ++itr){
+        conv_pooling.push_back(itr->pooling());
+        conv_grad.push_back(ConvolutionGradient(itr -> get_pointer()));
+    }
+    
+    for (auto itr = full_ptr -> begin(); itr != full_ptr -> end(); ++itr){
+        full_grad.push_back(FullyConnectedGradient(itr -> get_pointer()));
+    }
+    
+    otp_grad.reset(new OutputGradient(otp_ptr->return_funcType(),loss));
+
+}
+
+    
+void Gradient_Descent::backpropagate(tensor x, vector y){
+    vector a = NN -> action(x);
+}
+
+
+
+/*
+ tensor conv_pass_back(vector, HiddenGradient<tensor>);
+ vector full_pass_back(vector, HiddenGradient<vector>);
+ vector output_error(vector y, vector a);
+ 
+ void backpropagate(tensor x, vector y);
+ void update_net();
+ 
+ neural_net * NN;
+ 
+ std::vector<bool> conv_pooling;
+ std::vector<HiddenGradient<tensor>> conv_grad;
+ std::vector<HiddenGradient<vector>> full_grad;
+ OutputGradient otp_grad;
+ };
+
+ 
 tensor Backpropagation::conv_pass_back(tensor T, ind){
     
     if (conv_pool[n]){
@@ -264,14 +307,7 @@ tensor Backpropagation::get_conv_error(int n){
 */
 
 
-/*
-std::vector<std::vector<tensor>> w_conv;
-std::vector<tensor> b_conv;
-std::vector<matrix> w_conn;
-std::vector<vector> b_conn;
-matrix w_output;
-vector b_output;
-*/
+
 
 
 /*

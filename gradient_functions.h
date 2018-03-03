@@ -2,52 +2,92 @@
 #define GRADIENT_FUNCTIONS_H
 
 
-#include "activation_functions.h"
+#include "neural_layer.h"
 
 
 template <class T>
-class GradientFunction {
+class HiddenGradient {
 public:
     
-    GradientFunction(FunctionType _fn): fn_type(_fn){
-        switch (_fn){
-            case FunctionType::sigmoid:
-                fn = &GradientFunction::sigmoid_gradient;
-                break;
-            case FunctionType::tanh:
-                fn = &GradientFunction::tanh_gradient;
-                break;
-            case FunctionType::ReLU:
-                fn = &GradientFunction::ReLU_gradient;
-                break;
-            case FunctionType::softmax:
-                throw Exception("cannot specify softmax as hidden activation gradient");
-                break;
-        }
-    };
+    HiddenGradient(HiddenType);
+    HiddenType return_funcType() const;
     
     T operator() (const T & x) const {
         return fn(x);
     }
+protected:
     
-    FunctionType return_funcType() const {
-        return fn_type;
-    }
+    HiddenType fn_type;
     
-private:
-    FunctionType fn_type;
+    T err;
+    
     T (*fn)(const T&);
     
     static T sigmoid_gradient(const T & x);
     static T tanh_gradient(const T & x);
     static T ReLU_gradient(const T & x);
-    static T softmax_gradient(const T & x);
 };
 
 
 
+class ConvolutionGradient: public HiddenGradient<tensor>{
+public:
+    ConvolutionGradient(const convolutional_layer * _layer);
+    
+    tensor pass_back(tensor X);
+    tensor pass_back(vector X);
+    
+private:
+    const convolutional_layer * layer;
+};
+
+
+
+class FullyConnectedGradient: public HiddenGradient<vector>{
+public:
+    FullyConnectedGradient(const hidden_layer * _layer);
+    vector pass_back(vector X);
+private:
+    const hidden_layer * layer;
+};
+
+
+
+
+/////////////////////
+// Implementations //
+/////////////////////
+
+
 template <class T>
-T GradientFunction<T>::sigmoid_gradient(const T & x){
+HiddenGradient<T>::HiddenGradient(HiddenType _fn){
+    switch (_fn){
+        case HiddenType::sigmoid:
+            this->fn = &HiddenGradient<T>::sigmoid_gradient;
+            fn_type = HiddenType::sigmoid;
+            break;
+        case HiddenType::tanh:
+            this->fn = &HiddenGradient<T>::tanh_gradient;
+            fn_type = HiddenType::tanh;
+            break;
+        case HiddenType::ReLU:
+            this->fn = &HiddenGradient<T>::ReLU_gradient;
+            fn_type = HiddenType::ReLU;
+            break;
+    }
+}
+
+
+
+template <class T>
+HiddenType HiddenGradient<T>::return_funcType() const{
+    return fn_type;
+}
+
+
+
+template <class T>
+T HiddenGradient<T>::sigmoid_gradient(const T & x){
     T y(x);
     for (int k = 0; k < x.size(); k++){
         y(k) = x(k)*(1-x(k));
@@ -58,7 +98,7 @@ T GradientFunction<T>::sigmoid_gradient(const T & x){
 
 
 template <class T>
-T GradientFunction<T>::tanh_gradient(const T & x){
+T HiddenGradient<T>::tanh_gradient(const T & x){
     T y(x);
     for (int k = 0; k < x.size(); k++){
         y(k) = 1 - x(k)*x(k);
@@ -69,7 +109,7 @@ T GradientFunction<T>::tanh_gradient(const T & x){
 
 
 template <class T>
-T GradientFunction<T>::ReLU_gradient (const T & x){
+T HiddenGradient<T>::ReLU_gradient (const T & x){
     T y(x);
     for (int k = 0; k < x.size(); k++){
         if (0 < x(k)){

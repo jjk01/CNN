@@ -5,37 +5,27 @@
 #include <set>
 #include "neural_net.h"
 #include "gradient_functions.h"
-
-using training_set = std::vector<std::pair<tensor,vector>>;
-
-
-
+#include "output_gradient.h"
 
 
 
 class Gradient_Descent {
 public:
     
-    Gradient_Descent();
-    Gradient_Descent(const neural_net *);
+    Gradient_Descent(neural_net *, LossType);
     
-
 private:
-    
-    tensor conv_pass_back(tensor X, int ind);
-    tensor conv_pass_back(vector X, int ind);
-    tensor pool_pass_back(tensor X, int ind);
-    tensor pool_pass_back(vector X, int ind);
-    
-    void output_error(vector y, vector a);
 
     void backpropagate(tensor x, vector y);
     void update_net();
     
     neural_net * NN;
-    std::vector<GradientFunction<tensor>> conv_grad;
-    std::vector<GradientFunction<matrix>> full_grad;
-    //OutputGradient otp_grad;
+    LossType loss;
+    
+    std::vector<bool> conv_pooling;
+    std::vector<ConvolutionGradient> conv_grad;
+    std::vector<FullyConnectedGradient> full_grad;
+    std::unique_ptr<OutputGradient>  otp_grad = nullptr;
 };
 
 

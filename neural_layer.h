@@ -14,7 +14,6 @@ struct pair {
 };
 
 
-
 //////////////////
 /* Input Layers */
 //////////////////
@@ -42,7 +41,6 @@ private:
 
 
 
-
 ////////////////////////
 /* Convolution Layers */
 ////////////////////////
@@ -53,10 +51,12 @@ public:
 
     convolutional_layer(HiddenType fn, int W_in, int Depth, int W_out, int Kernals, int W_filter, int Stride);
     
+    const convolutional_layer * get_pointer() const;
+    
     tensor feed_forward(const tensor&);
     void pooling_convert(int Pw);
 
-    FunctionType return_funcType() const;
+    HiddenType return_funcType() const;
     bool pooling() const;
     
     std::vector<tensor> return_weights() const;
@@ -76,7 +76,7 @@ public:
 
 private:
 
-    ActivationFunction<tensor> act_fn;
+    HiddenFunction<tensor> act_fn;
     
     tensor convolve(const tensor &);
     tensor pool(const tensor &);
@@ -99,8 +99,6 @@ private:
 
 
 
-
-
 //////////////////////////
 /* Fully connected part */
 //////////////////////////
@@ -108,12 +106,8 @@ private:
 
 class fully_connected_layer {
 public:
+    fully_connected_layer(int,int);
     
-    fully_connected_layer(HiddenType, int,int);
-    vector feed_forward(const vector&);
-
-    FunctionType return_funcType();
-
     void update(const matrix& dw, const vector & db);
 
     vector get_output() const;
@@ -126,14 +120,23 @@ public:
 
 protected:
     
-    fully_connected_layer(OutputType,int,int);
-    void initialise_parameters(int,int);
-
     matrix w;
     vector b;
     vector a;
+};
+
+
+
+class hidden_layer: public fully_connected_layer {
+public:
+    hidden_layer(HiddenType, int,int);
+    const hidden_layer * get_pointer() const;
     
-    ActivationFunction<vector> fn;
+    vector feed_forward(const vector&);
+    HiddenType return_funcType() const;
+    
+private:
+    HiddenFunction<vector> act_fn;
 };
 
 
@@ -141,6 +144,11 @@ protected:
 class output_layer: public fully_connected_layer {
 public:
     output_layer(OutputType, int,int);
+    const output_layer * get_pointer() const;
+    vector feed_forward(const vector&);
+    OutputType return_funcType() const;
+private:
+    OutputFunction act_fn;
 };
 
 

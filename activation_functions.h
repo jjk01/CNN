@@ -3,18 +3,9 @@
 
 #include <cmath>
 #include "matrix.h"
-
 /*
 This file contains the activation functions to be used in the layers of the neural net.
 */
-
-
-enum class FunctionType {
-    sigmoid,
-    tanh,
-    ReLU,
-    softmax,
-};
 
 
 enum class HiddenType {
@@ -26,33 +17,25 @@ enum class HiddenType {
 
 enum class OutputType {
     sigmoid,
-    tanh,
-    ReLU,
     softmax,
 };
-
 
 
 
 template <class T>
 class ActivationFunction {
 public:
- 
-    ActivationFunction(HiddenType);
-    ActivationFunction(OutputType);
- 
+
     T operator() (const T & x) const {
         return fn(x);
     }
-    
-    FunctionType return_funcType() const {
-        return fn_type;
-    }
-    
+
 protected:
-    FunctionType fn_type;
+
+    ActivationFunction() = default;
+
     T (*fn)(const T&);
-    
+
     static T sigmoid_function(const T & x);
     static T tanh_function(const T & x);
     static T ReLU_function(const T & x);
@@ -61,48 +44,56 @@ protected:
 
 
 
+template <class T>
+class HiddenFunction: public ActivationFunction<T>{
+public:
+    HiddenFunction(HiddenType);
+    HiddenType return_funcType() const;
+private:
+    HiddenType fn_type;
+};
+
+
+
+class OutputFunction: public ActivationFunction<vector> {
+public:
+
+    OutputFunction(OutputType _fn);
+    OutputType return_funcType() const;
+private:
+    OutputType fn_type;
+};
+
+
+
+/////////////////////
+// Implementations //
+/////////////////////
+
 
 template <class T>
-ActivationFunction<T>::ActivationFunction(HiddenType _fn){
+HiddenFunction<T>::HiddenFunction(HiddenType _fn){
     switch (_fn){
         case HiddenType::sigmoid:
-            fn = &ActivationFunction::sigmoid_function;
-            fn_type = FunctionType::sigmoid;
+            this->fn = &ActivationFunction<T>::sigmoid_function;
+            fn_type = HiddenType::sigmoid;
             break;
         case HiddenType::tanh:
-            fn = &ActivationFunction::tanh_function;
-            fn_type = FunctionType::tanh;
+            this->fn = &ActivationFunction<T>::tanh_function;
+            fn_type = HiddenType::tanh;
             break;
         case HiddenType::ReLU:
-            fn = &ActivationFunction::ReLU_function;
-            fn_type = FunctionType::ReLU;
+            this->fn = &ActivationFunction<T>::ReLU_function;
+            fn_type = HiddenType::ReLU;
             break;
     }
 }
 
 
 
-
 template <class T>
-ActivationFunction<T>::ActivationFunction(OutputType _fn){
-    switch (_fn){
-        case OutputType::sigmoid:
-            fn = &ActivationFunction::sigmoid_function;
-            fn_type = FunctionType::sigmoid;
-            break;
-        case OutputType::tanh:
-            fn = &ActivationFunction::tanh_function;
-            fn_type = FunctionType::tanh;
-            break;
-        case OutputType::ReLU:
-            fn = &ActivationFunction::ReLU_function;
-            fn_type = FunctionType::ReLU;
-            break;
-        case OutputType::softmax:
-            fn = &ActivationFunction::softmax_function;
-            fn_type = FunctionType::softmax;
-            break;
-    }
+HiddenType HiddenFunction<T>::return_funcType() const{
+    return fn_type;
 }
 
 
@@ -149,7 +140,7 @@ T ActivationFunction<T>::softmax_function (const T & x){
         y(k) = z;
     }
     return y/N;
-    
+
 }
 
 
