@@ -40,8 +40,15 @@ OutputType OutputGradient::return_funcType() const{
 }
 
 
+
 LossType OutputGradient::return_lossType() const{
     return loss;
+}
+
+
+
+const output_layer * OutputGradient::return_ptr() const{
+    return layer;
 }
 
 
@@ -50,8 +57,8 @@ vector OutputGradient::get_error() const {
     return err;
 }
 
-vector OutputGradient::pass_back(const vector& a, const vector& y){
-    
+vector OutputGradient::pass_back(const vector& y){
+    vector a = layer -> get_output();
     matrix w = layer -> get_weight();
     err = fn(a,y);
     vector Y = (w.transpose())*err;

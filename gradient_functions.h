@@ -38,6 +38,8 @@ class ConvolutionGradient: public HiddenGradient<tensor>{
 public:
     ConvolutionGradient(const convolutional_layer * _layer);
     
+    const convolutional_layer * return_ptr() const;
+    
     tensor pass_back(tensor X);
     tensor pass_back(vector X);
     
@@ -50,6 +52,8 @@ private:
 class FullyConnectedGradient: public HiddenGradient<vector>{
 public:
     FullyConnectedGradient(const hidden_layer * _layer);
+    const hidden_layer * return_ptr() const;
+    
     vector pass_back(vector X);
 private:
     const hidden_layer * layer;

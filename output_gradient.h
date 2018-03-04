@@ -20,9 +20,10 @@ public:
     
     OutputType return_funcType() const;
     LossType return_lossType() const;
+    const output_layer * return_ptr() const;
     
     vector get_error() const;
-    vector pass_back(const vector& a, const vector& y);
+    vector pass_back(const vector& y);
     
 private:
     

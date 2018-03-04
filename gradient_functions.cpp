@@ -52,6 +52,10 @@ tensor ConvolutionGradient::pass_back(vector X){
 
 
 
+const convolutional_layer * ConvolutionGradient::return_ptr() const {
+    return layer;
+}
+
 
 FullyConnectedGradient::FullyConnectedGradient(const hidden_layer * _layer):
 HiddenGradient<vector>(_layer->return_funcType()),layer(_layer){};
@@ -66,4 +70,10 @@ vector FullyConnectedGradient::pass_back(vector X){
     
     vector Y = (w.transpose())*err;
     return Y;
+}
+
+
+
+const hidden_layer * FullyConnectedGradient::return_ptr() const {
+    return layer;
 }

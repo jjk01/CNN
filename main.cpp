@@ -12,12 +12,7 @@ int main(){
     y(5) = 0.3;
     y(7) = 0.5;
 
-    //training_set data;
-    //data.push_back(std::make_pair(x,y));
-
-
-    
-
+    training_data data(10,std::make_pair(x,y));
 
     try {
      
@@ -30,21 +25,24 @@ int main(){
         NN.add_pooling_layer(3);
         NN.add_fully_connected_layer(HiddenType::sigmoid,8);
         NN.add_output_layer(OutputType::softmax,8);
-
-
+        
         clock_t start = clock();
+        
         vector a = NN.action(x);
+        a.print();
+        
+        
+        TrainingStatergy Trainer(&NN,data,LossType::cross_entropy);
+        Trainer.set_max_iterations(200);
+        Trainer.set_rate(0.1);
+        Trainer.set_batch_size(10);
+        Trainer.train();
+        
+        
+        a = NN.action(x);
         double duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
         std::cout <<  "Time taken = " << duration << "\n";
         a.print();
-        
-        //Gradient_Descent GD(&NN, LossType::cross_entropy);
-        
-        /*for (int n = 0; n < 1e3; ++n){
-            GD.Train(x,y);
-        }*/
-        
-
 
 
     } catch( Exception e ) {

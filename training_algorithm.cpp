@@ -4,19 +4,82 @@
 
 
 
-TrainingMethod::TrainingMethod(neural_net * _NN, LossType _loss): NN(_NN), loss(_loss), params(_NN){}
-
-
-
-void TrainingMethod::epoch_increment(training_data data){
-    
-    std::size_t data_size = data.size();
-    for (auto itr = data.begin(); itr != data.end(); ++itr){
-        iterate(itr->first, itr->second);
-    }
-    params /= data_size;
+TrainingStatergy::TrainingStatergy(neural_net * _NN, const training_data & _data, LossType loss):
+data(_data), NN(_NN){
+    method.reset(new Gradient_Descent(NN,loss));
 }
 
+
+void TrainingStatergy::train(){
+    for (int n = 0; n < max_epochs; ++n){
+        std::vector<int> indices = generate_batch();
+        increment_epoch(indices);
+        if (print_progress){
+            std::cout << "epoch = " << n+1 << ", error = " << err << "\n";
+        }
+    }
+}
+
+void TrainingStatergy::increment_epoch(std::vector<int> indices){
+    
+    err *= 0;
+    
+    method -> zero_parameters();
+    for (int n = 0; n < indices.size(); ++n){
+        vector a = NN -> action(data[n].first);
+        method -> iterate(data[n].second);
+        err += (a - data[n].second).norm();
+    }
+    
+    err /= data.size();
+    
+    net_parameters dP = method -> get_parameters();
+    dP /= data.size();
+    dP *= -r;
+    
+    NN -> update(dP);
+}
+
+
+
+
+std::vector<int> TrainingStatergy::generate_batch(){
+    
+    std::size_t data_size = data.size();
+    
+    std::set<unsigned int> index_set;
+    if (batch_size < std::ceil(data_size/2.0)){
+        
+        while (index_set.size() < batch_size){
+            index_set.insert(rand() % data_size);
+        }
+        
+    } else {
+        
+        for (int k = 0; k < data_size; k++){
+            index_set.insert(k);
+        }
+        std::set<unsigned int> temp_ind;
+        while (temp_ind.size() < data_size - batch_size){
+            temp_ind.insert(rand() % data_size);
+        }
+        for (auto it = temp_ind.begin(); it != temp_ind.end(); it++){
+            index_set.erase(*it);
+        }
+    }
+    
+    std::vector<int> indices;
+    
+    for (auto itr = index_set.begin(); itr != index_set.end(); ++itr){
+        indices.push_back(*itr);
+    }
+    
+    return indices;
+}
+
+
+
+TrainingMethod::TrainingMethod(neural_net * _NN, LossType _loss): loss(_loss), params(_NN){}
 
 
 
@@ -33,11 +96,11 @@ void TrainingMethod::zero_parameters(){
 
 
 
-Gradient_Descent::Gradient_Descent(neural_net * _NN, LossType _loss): TrainingMethod(_NN,_loss) {
-    
-    const std::vector<convolutional_layer> * conv_ptr = NN -> convolution_ptr();
-    const std::vector<hidden_layer> * full_ptr = NN -> full_ptr();
-    const output_layer * otp_ptr = NN -> output_ptr();
+Gradient_Descent::Gradient_Descent(neural_net * _NN, LossType _loss): TrainingMethod(_NN,_loss), inpt(_NN -> input_ptr()) {
+
+    const std::vector<convolutional_layer> * conv_ptr = _NN -> convolution_ptr();
+    const std::vector<hidden_layer> * full_ptr = _NN -> full_ptr();
+    const output_layer * otp_ptr = _NN -> output_ptr();
     
     for (auto itr = conv_ptr -> begin(); itr != conv_ptr -> end(); ++itr){
         conv_grad.push_back(ConvolutionGradient(itr -> get_pointer()));
@@ -52,8 +115,8 @@ Gradient_Descent::Gradient_Descent(neural_net * _NN, LossType _loss): TrainingMe
 }
 
 
-void Gradient_Descent::iterate(tensor x, vector y){
-    backpropagate(x,y);
+void Gradient_Descent::iterate(vector y){
+    backpropagate(y);
     add_params();
 }
 
@@ -61,21 +124,16 @@ void Gradient_Descent::iterate(tensor x, vector y){
 
 /* Propagating the error back through the net. */
     
-void Gradient_Descent::backpropagate(tensor x, vector y){
-
-    vector a = NN -> action(x);
-    vector e1 = otp_grad -> pass_back(a,y);
+void Gradient_Descent::backpropagate(vector y){
+    
+    vector e1 = otp_grad -> pass_back(y);
     
     for (auto rit = full_grad.rbegin(); rit != full_grad.rend(); rit++){
         e1 = rit -> pass_back(e1);
     }
     
-    if (!conv_grad.empty()){
-        tensor e2 = conv_grad.back().pass_back(e1);
-        
-        for (auto rit = conv_grad.rbegin()+1; rit != conv_grad.rend(); rit++){
-            e2 = rit -> pass_back(e2);
-        }
+    for (auto rit = conv_grad.rbegin(); rit != conv_grad.rend(); rit++){
+        e1 = rit -> pass_back(e1);
     }
     
 }
@@ -85,32 +143,33 @@ void Gradient_Descent::backpropagate(tensor x, vector y){
 
 void Gradient_Descent::add_params(){
     
-    const input_layer * inpt_ptr = NN -> input_ptr();
-    const std::vector<convolutional_layer> * conv_ptr = NN -> convolution_ptr();
-    const std::vector<hidden_layer> * full_ptr = NN -> full_ptr();
+    tensor a = inpt -> get_output();
     
-    tensor a = inpt_ptr -> get_output();
-
-    
-    for (int n = 0; n < conv_ptr -> size(); ++n){
-        tensor err = conv_grad[n].get_error();
-        int S = (*conv_ptr)[n].return_stride();
-        int P = (*conv_ptr)[n].return_padding();
+    for (auto itr = conv_grad.begin(); itr != conv_grad.end(); ++itr){
+        
+        const convolutional_layer * ptr = itr -> return_ptr();
+        tensor err = itr -> get_error();
+        int S = ptr -> return_stride();
+        int P = ptr -> return_padding();
         
         conv_parameters dP(a.correlation(S,S,P,P,err),err);
-        params.conv[n] += dP;
-        a = (*conv_ptr)[n].get_output();
-        
+        params.conv[std::distance(conv_grad.begin(),itr)] += dP;
+        a = ptr -> get_output();
     }
+
     
     vector b{a};
     
-    for (int n = 0; n < full_ptr -> size(); ++n){
-        vector err = full_grad[n].get_error();
+    for (auto itr = full_grad.begin(); itr != full_grad.end(); ++itr){
+        
+        const hidden_layer * ptr = itr -> return_ptr();
+        vector err = itr -> get_error();
+        
         full_parameters dP(outer_product(err,b),err);
-        params.full[n] += dP;
-        b = (*full_ptr)[n].get_output();
+        params.full[std::distance(full_grad.begin(),itr)] += dP;
+        b = ptr -> get_output();
     }
+
     
     vector err = otp_grad -> get_error();
     full_parameters dP(outer_product(err,b),err);
@@ -186,14 +245,6 @@ void Backpropagation::implement(){
     err = dB_otp.norm()/r;
 
 }
-
-
-
-
-
-
-
-
 
 
 */
