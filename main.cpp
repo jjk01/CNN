@@ -25,10 +25,8 @@ int main(){
         neural_net NN;
 
         NN.add_input_layer(20,3);
-        //NN.add_input_layer(10,3);
         NN.add_pooling_layer(2);
         NN.add_convolution_layer(HiddenType::sigmoid,9,1,4,1);
-        //NN.add_convolution_layer(HiddenType::sigmoid,9,1,4,1);
         NN.add_pooling_layer(3);
         NN.add_fully_connected_layer(HiddenType::sigmoid,8);
         NN.add_output_layer(OutputType::softmax,8);
@@ -40,14 +38,11 @@ int main(){
         std::cout <<  "Time taken = " << duration << "\n";
         a.print();
         
-        Gradient_Descent GD(&NN, LossType::cross_entropy);
+        //Gradient_Descent GD(&NN, LossType::cross_entropy);
         
-        for (int n = 0; n < 1e3; ++n){
+        /*for (int n = 0; n < 1e3; ++n){
             GD.Train(x,y);
-        }
-        
-        a = NN.action(x);
-        a.print();
+        }*/
         
 
 
