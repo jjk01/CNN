@@ -111,6 +111,13 @@ pair convolutional_layer::output_size() const {
 }
 
 
+
+int convolutional_layer::num_kernals() const {
+    return a.size(index::z);
+}
+
+
+
 int convolutional_layer::return_stride() const {
     return stride;
 }
@@ -128,7 +135,7 @@ int convolutional_layer::return_pooling_width() const {
 
 
 
-tensor convolutional_layer::ouput() const{
+tensor convolutional_layer::get_output() const{
     return a;
 }
 

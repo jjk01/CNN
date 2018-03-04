@@ -1,11 +1,12 @@
 #include "output_gradient.h"
 
 
-OutputGradient::OutputGradient(OutputType _fn, LossType _loss): loss(_loss), fn_type(_fn){
-    
+OutputGradient::OutputGradient(LossType _loss, const output_layer * _layer):
+loss(_loss), fn_type(_layer -> return_funcType()), layer(_layer){
+
     if (_loss == LossType::quadratic){
         
-        switch (_fn){
+        switch (fn_type){
             case OutputType::sigmoid:
                 fn = &quadratic_sigmoid;
                 fn_type = OutputType::sigmoid;
@@ -18,7 +19,7 @@ OutputGradient::OutputGradient(OutputType _fn, LossType _loss): loss(_loss), fn_
         
     } else if (_loss == LossType::cross_entropy) {
         
-        switch (_fn){
+        switch (fn_type){
             case OutputType::sigmoid:
                 fn = &cross_entropy_sigmoid;
                 fn_type = OutputType::sigmoid;
@@ -42,6 +43,22 @@ OutputType OutputGradient::return_funcType() const{
 LossType OutputGradient::return_lossType() const{
     return loss;
 }
+
+
+
+vector OutputGradient::get_error() const {
+    return err;
+}
+
+vector OutputGradient::pass_back(const vector& a, const vector& y){
+    
+    matrix w = layer -> get_weight();
+    err = fn(a,y);
+    vector Y = (w.transpose())*err;
+    return Y;
+}
+
+
 
 
 vector OutputGradient::quadratic_softmax(const vector & a, const vector & y){

@@ -6,14 +6,13 @@
 
 
 
-Gradient_Descent::Gradient_Descent(neural_net * _NN, LossType _loss): NN(_NN), loss(_loss){
+Gradient_Descent::Gradient_Descent(neural_net * _NN, LossType _loss): NN(_NN), loss(_loss), params(_NN){
     
     const std::vector<convolutional_layer> * conv_ptr = NN -> convolution_ptr();
     const std::vector<hidden_layer> * full_ptr = NN -> full_ptr();
     const output_layer * otp_ptr = NN -> output_ptr();
     
     for (auto itr = conv_ptr -> begin(); itr != conv_ptr -> end(); ++itr){
-        conv_pooling.push_back(itr->pooling());
         conv_grad.push_back(ConvolutionGradient(itr -> get_pointer()));
     }
     
@@ -21,15 +20,79 @@ Gradient_Descent::Gradient_Descent(neural_net * _NN, LossType _loss): NN(_NN), l
         full_grad.push_back(FullyConnectedGradient(itr -> get_pointer()));
     }
     
-    otp_grad.reset(new OutputGradient(otp_ptr->return_funcType(),loss));
+    otp_grad.reset(new OutputGradient(loss,otp_ptr));
 
 }
 
+
+void Gradient_Descent::Train(tensor x, vector y){
+    backpropagate(x,y);
+    add_params();
+    net_parameters dP(params);
+    dP *= -0.05;
+    NN -> update(dP);
+    params.zero();
+}
+
+
+
+/* Propagating the error back through the net. */
     
 void Gradient_Descent::backpropagate(tensor x, vector y){
+
     vector a = NN -> action(x);
+    vector e1 = otp_grad -> pass_back(a,y);
+    
+    for (auto rit = full_grad.rbegin(); rit != full_grad.rend(); rit++){
+        e1 = rit -> pass_back(e1);
+    }
+    
+    if (!conv_grad.empty()){
+        tensor e2 = conv_grad.back().pass_back(e1);
+        
+        for (auto rit = conv_grad.rbegin()+1; rit != conv_grad.rend(); rit++){
+            e2 = rit -> pass_back(e2);
+        }
+    }
+    
 }
 
+
+/* This function uses the errors calculated in the previous backprop run to determine dC/dW and dC/B for a particular pass. Theses are then added to total parameter change. */
+
+void Gradient_Descent::add_params(){
+    
+    const input_layer * inpt_ptr = NN -> input_ptr();
+    const std::vector<convolutional_layer> * conv_ptr = NN -> convolution_ptr();
+    const std::vector<hidden_layer> * full_ptr = NN -> full_ptr();
+    
+    tensor a = inpt_ptr -> get_output();
+
+    
+    for (int n = 0; n < conv_ptr -> size(); ++n){
+        tensor err = conv_grad[n].get_error();
+        int S = (*conv_ptr)[n].return_stride();
+        int P = (*conv_ptr)[n].return_padding();
+        
+        conv_parameters dP(a.correlation(S,S,P,P,err),err);
+        params.conv[n] += dP;
+        a = (*conv_ptr)[n].get_output();
+        
+    }
+    
+    vector b{a};
+    
+    for (int n = 0; n < full_ptr -> size(); ++n){
+        vector err = full_grad[n].get_error();
+        full_parameters dP(outer_product(err,b),err);
+        params.full[n] += dP;
+        b = (*full_ptr)[n].get_output();
+    }
+    
+    vector err = otp_grad -> get_error();
+    full_parameters dP(outer_product(err,b),err);
+    params.otp += dP;
+}
 
 
 /*
@@ -49,46 +112,8 @@ void Gradient_Descent::backpropagate(tensor x, vector y){
  };
 
  
-tensor Backpropagation::conv_pass_back(tensor T, ind){
-    
-    if (conv_pool[n]){
-        
-        conv_err[n] *= 0.0;
-        int pooling_width = NN.conv[n] -> pooling_width();
-        tensor ind = NN.conv[n] -> pool_index();
-        
-        
-        for (int x = 0; x < T.size(index::x); x++){
-            int X = pooling_width*x;
-            for (int y = 0; y < T.size(index::y); y++){
-                int Y = pooling_width*y;
-                for (int z = 0; z < T.size(index::z); z++){
-                    
-                    if ( ind(X,Y,z) == 1 ){
-                        conv_err[n](X,Y,z) = T(x,y,z);
-                    }
-                }
-            }
-        }
-        
-        return conv_err[n];
-    }
-
-    
-}
-
-tensor conv_pass_back(vector X, tensor err){
-    
-    if (pooling){
-        tensor A = tensor::zeros(a.size(index::x), a.size(index::y), a.size(index::z));
-        A.set_data(X.return_data());
-        return pass_back(A);
-    }
-}
 
 
-tensor pool_pass_back(tensor X);
-tensor pool_pass_back(vector X);
     
 void output_error(vector y, vector a);
     

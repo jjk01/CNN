@@ -2,7 +2,7 @@
 #define output_gradient_hpp
 
 
-#include "activation_functions.h"
+#include "neural_net.h"
 
 
 
@@ -16,19 +16,20 @@ enum class LossType {
 class OutputGradient {
 public:
     
-    OutputGradient(OutputType, LossType);
+    OutputGradient(LossType, const output_layer *);
     
     OutputType return_funcType() const;
     LossType return_lossType() const;
     
-    vector operator() (const vector& a, const vector& y){
-        return fn(a,y);
-    }
+    vector get_error() const;
+    vector pass_back(const vector& a, const vector& y);
     
 private:
     
     LossType loss;
     OutputType fn_type;
+    vector err;
+    const output_layer * layer;
     
     vector (*fn)(const vector &, const vector &) = nullptr;
     

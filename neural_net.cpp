@@ -107,6 +107,25 @@ void neural_net::forward_propagate(const tensor & t) {
 
 
 
+void neural_net::update(net_parameters params){
+    
+    if (conv.size() != params.conv.size()){
+        throw Exception("net update: size mismatch.");
+    }
+    
+    for (int n = 0; n < conv.size(); ++n){
+        conv[n].update(params.conv[n].W,params.conv[n].B);
+    }
+    
+    for (int n = 0; n < full.size(); ++n){
+        full[n].update(params.full[n].W,params.full[n].B);
+    }
+    
+    otp -> update(params.otp.W,params.otp.B);
+}
+
+
+
 
 const std::vector<convolutional_layer> * neural_net::convolution_ptr() const {
     return &conv;

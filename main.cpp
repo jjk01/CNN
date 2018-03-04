@@ -1,6 +1,6 @@
 #include <iostream>
 #include "neural_net.h"
-//#include "training_algorithm.hpp"
+#include "training_algorithm.h"
 #include <ctime>
 // check that the Weight gradient also holds true for the pooling layers.
 
@@ -25,10 +25,12 @@ int main(){
         neural_net NN;
 
         NN.add_input_layer(20,3);
+        //NN.add_input_layer(10,3);
         NN.add_pooling_layer(2);
         NN.add_convolution_layer(HiddenType::sigmoid,9,1,4,1);
+        //NN.add_convolution_layer(HiddenType::sigmoid,9,1,4,1);
         NN.add_pooling_layer(3);
-        NN.add_fully_connected_layer(HiddenType::ReLU,8);
+        NN.add_fully_connected_layer(HiddenType::sigmoid,8);
         NN.add_output_layer(OutputType::softmax,8);
 
 
@@ -38,7 +40,16 @@ int main(){
         std::cout <<  "Time taken = " << duration << "\n";
         a.print();
         
-        throw Exception("main try");
+        Gradient_Descent GD(&NN, LossType::cross_entropy);
+        
+        for (int n = 0; n < 1e3; ++n){
+            GD.Train(x,y);
+        }
+        
+        a = NN.action(x);
+        a.print();
+        
+
 
 
     } catch( Exception e ) {

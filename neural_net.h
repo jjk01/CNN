@@ -2,7 +2,9 @@
 #define NEURAL_NET_H
 
 #include "neural_layer.h"
+#include "parameters.h"
 
+class net_parameters;
 
 class neural_net {
 public:
@@ -17,6 +19,8 @@ public:
 
     vector action(const tensor &);
     void forward_propagate(const tensor &);
+    
+    void update(net_parameters);
     
     const std::vector<convolutional_layer> * convolution_ptr() const;
     const std::vector<hidden_layer> * full_ptr() const;

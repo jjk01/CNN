@@ -2,7 +2,7 @@
 #define GRADIENT_FUNCTIONS_H
 
 
-#include "neural_layer.h"
+#include "neural_net.h"
 
 
 template <class T>
@@ -12,13 +12,17 @@ public:
     HiddenGradient(HiddenType);
     HiddenType return_funcType() const;
     
+    T get_error() const {
+        return err;
+    }
+    
     T operator() (const T & x) const {
         return fn(x);
     }
+    
 protected:
     
     HiddenType fn_type;
-    
     T err;
     
     T (*fn)(const T&);

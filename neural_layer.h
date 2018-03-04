@@ -3,7 +3,6 @@
 
 #include "activation_functions.h"
 
-
 struct pair {
 
     pair(): x(0),y(0){};
@@ -69,7 +68,9 @@ public:
     pair weight_size() const;
     pair bias_size() const;
     pair output_size() const;
-    tensor ouput() const;
+    int num_kernals() const;
+    
+    tensor get_output() const;
     tensor pool_index() const;
 
     void update(std::vector<tensor>, tensor);
@@ -111,6 +112,7 @@ public:
     void update(const matrix& dw, const vector & db);
 
     vector get_output() const;
+    vector get_input() const;
     matrix get_weight() const;
     vector get_bias() const;
 
