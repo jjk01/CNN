@@ -61,7 +61,7 @@ void input_layer::pooling_convert(int width){
 
 convolutional_layer::convolutional_layer(HiddenType _fn, int W_in, int D, int W_out, int K, int W_filter, int S):
 act_fn(HiddenFunction<tensor>(_fn)), stride(S), depth(D), a(tensor::zeros(W_out,W_out,K)), b(tensor::zeros(W_out,W_out,K)),
-pooled(false), pooling_width(0), ind(tensor()), output_width(W_out)
+pooled(false), pooling_width(0), ind(tensor::zeros(W_out,W_out,K)), output_width(W_out)
 {
 
     if (S*(W_out-1) + W_filter < W_in){
@@ -71,6 +71,7 @@ pooled(false), pooling_width(0), ind(tensor()), output_width(W_out)
         padding = (int) std::floor((S*(W_out-1) + W_filter - W_in)/2.0);
         width = 2*padding + W_in - S*(W_out-1);
     }
+    
 
     for (int k = 0; k < K; k++){
         w.push_back(tensor::random(width,width,D));
@@ -164,7 +165,7 @@ void convolutional_layer::pooling_convert(int width){
     pooling_width = width;
     pooled = true;
     ind = tensor::zeros(output_width, output_width, a.size(index::z));
-    a = tensor::zeros(output_width/width,output_width/width,a.size(index::z));
+    a = tensor::zeros(output_width/width,output_width/width, a.size(index::z));
 }
 
 
@@ -181,7 +182,7 @@ bool convolutional_layer::pooling() const {
 
 
 tensor convolutional_layer::feed_forward(const tensor& t){
-    
+
     tensor A = convolve(t);
     
     if (pooled){
@@ -206,7 +207,7 @@ tensor convolutional_layer::convolve(const tensor & t){
 
 
 tensor convolutional_layer::pool(const tensor & t){
-
+    
     tensor S = a;
     ind *= 0.0;
     int n1,n2,n3;
@@ -215,7 +216,7 @@ tensor convolutional_layer::pool(const tensor & t){
         for (int y = 0; y < a.size(index::y); y++){
             for (int z = 0; z < a.size(index::z); z++){
                 S(x,y,z) = t.block(x*pooling_width, y*pooling_width, z, pooling_width, pooling_width,1).max(n1,n2,n3);
-                ind(x*pooling_width + n1, y*pooling_width + n2, z*pooling_width + n3) = 1.0;
+                ind(x*pooling_width + n1, y*pooling_width + n2, z) = 1.0;
             }
         }
     }

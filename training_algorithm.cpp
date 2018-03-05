@@ -11,10 +11,11 @@ data(_data), NN(_NN){
 
 
 void TrainingStatergy::train(){
+
     for (int n = 0; n < max_epochs; ++n){
         std::vector<int> indices = generate_batch();
         increment_epoch(indices);
-        if (print_progress){
+        if (!print_progress){
             std::cout << "epoch = " << n+1 << ", error = " << err << "\n";
         }
     }
@@ -23,7 +24,7 @@ void TrainingStatergy::train(){
 void TrainingStatergy::increment_epoch(std::vector<int> indices){
     
     err *= 0;
-    
+    net_parameters prev = method -> get_parameters();
     method -> zero_parameters();
     for (int n = 0; n < indices.size(); ++n){
         vector a = NN -> action(data[n].first);
@@ -31,10 +32,11 @@ void TrainingStatergy::increment_epoch(std::vector<int> indices){
         err += (a - data[n].second).norm();
     }
     
-    err /= data.size();
+    err /= indices.size();
     
     net_parameters dP = method -> get_parameters();
-    dP /= data.size();
+    dP += p*prev;
+    dP /= indices.size();
     dP *= -r;
     
     NN -> update(dP);

@@ -4,6 +4,7 @@
 #include <iostream>
 #include <math.h>
 #include <ctime>
+#include <random>
 
 tensor::tensor(): Lx(0), Ly(0), Lz(0){}
 
@@ -51,8 +52,15 @@ tensor tensor::ones(int n1, int n2, int n3){
 tensor tensor::random(int n1, int n2, int n3){
     tensor t(n1,n2,n3);
 
+    /*for (int k = 0; k < t.size(); k++){
+        t.data[k] = (std::rand() % 100)/95.0;
+    }*/
+    
+    std::default_random_engine generator;
+    std::normal_distribution<double> dist(0.0,1/sqrt(t.size()));
+    
     for (int k = 0; k < t.size(); k++){
-        t.data[k] = (std::rand() % 50)/25.0 - 1.0;
+        t.data[k] = dist(generator);
     }
 
     return t;
@@ -293,7 +301,6 @@ std::vector<tensor> tensor::correlation(int Sx, int Sy, int Px, int Py, const te
     int L2 = 1 + (T.Ly - t.size(index::y))/Sy;
     int L3 = T.Lz;
 
-    tensor s(L1, L2, L3);
 
     for (int m1 = 0; m1 < t.Lz; m1++){
         tensor S = tensor::zeros(L1, L2, L3);
@@ -305,7 +312,8 @@ std::vector<tensor> tensor::correlation(int Sx, int Sy, int Px, int Py, const te
             for (int n1 = 0; n1 < L1; n1++){
                 for (int n2 = 0; n2 < L2; n2++){
 
-                    S(n1,n2,m2) = g2.dot(Sx*n1,Sy*n2,0,t);
+                    S(n1,n2,m2) = g2.dot(Sx*n1,Sy*n2,0,g1);
+                    
 
                 }
             }
